@@ -1,0 +1,42 @@
+global class NBA_Enhance_LoyaltyDiscount{
+
+
+    global class DataContainer {
+        @InvocableVariable
+        public string userId;
+    
+        @InvocableVariable
+        public List<Recommendation> recommendations;    
+    }
+
+
+    @InvocableMethod (label='Enhance Loyalty Discount V2' description='Returns a list of edited recommendations')
+    global static List<List<Recommendation>> enhanceRecs(List<DataContainer> inputData ) {
+        List<List<Recommendation>> outputs = new List<List<Recommendation>>();
+        
+        if (inputData.size() <= 0) {
+            return outputs;
+        }
+
+        // User Context Contact
+        String currentUserId = inputData[0].userId;
+        Integer orderCount = [SELECT count() FROM ccrz__E_Order__c WHERE CreatedById = :currentUserId];
+        
+        List<Recommendation> enhanceRecommendations = new List<Recommendation>(); 
+
+        for (Recommendation r : inputData[0].recommendations){
+            if(orderCount > 25 && orderCount < 50){
+                r.Name = 'You have made ' + orderCount + ' orders!';
+                r.Description = r.Description + ' Here is a 5% discount';
+                enhanceRecommendations.add(r);
+            }
+            else if (orderCount > 50){
+                r.Description = r.Description + ' Here is a 10% discount';
+                enhanceRecommendations.add(r);
+            }
+
+        }
+        outputs.add(enhanceRecommendations);
+        return outputs;
+    }
+}
