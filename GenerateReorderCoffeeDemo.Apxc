@@ -1,0 +1,33 @@
+global class NBA_Generate_CoffeeReorder {
+    @InvocableMethod (label='Generate Reorder coffee' description='Create a recommendation for reordering')
+    global static List<List<Recommendation>> generateReorderRecs(List<String> userId ) {
+        List<List<Recommendation>> outputs = new List<List<Recommendation>>();
+        
+        // User Context Contact
+        String currentUserId = userId[0];
+        List<ccrz__E_OrderItem__c> orderItems = [SELECT ccrz__Product_Name__c,CreatedDate,Id FROM ccrz__E_OrderItem__c WHERE 
+                                                    ccrz__Product_Name__c = :'Medium Roast Ethiopian Coffee Bean' 
+                                                    AND CreatedById =:currentUserId ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+                
+        List<Recommendation> newRecs = new List<Recommendation>();
+        for(ccrz__E_OrderItem__c orderItem : orderItems) {
+            
+            String name = orderItem.ccrz__Product_Name__c;
+            Double orderAgeDays = orderItem.CreatedDate.date().daysBetween(date.today()); 
+            
+            if (orderAgeDays >= 0) {
+                Recommendation rec = new Recommendation(
+                    Name='You have not ordered coffee in over a week',
+                    Description='Order more ' + name,
+                    ActionReference='NBA_Reorder_Demo',
+                    AcceptanceLabel='Reorder more coffee',
+                    RejectionLabel='No thank you'
+                );       
+                newRecs.add(rec);
+            }
+        }
+        outputs.add(newRecs);
+        
+        return outputs;
+    }
+}
