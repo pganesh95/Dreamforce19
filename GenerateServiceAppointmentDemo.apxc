@@ -1,1 +1,25 @@
+global class NBA_Generate_Checklist {
+    @InvocableMethod (label='Generate readiness checklist' description='Returns a list of recommendations when there are service appointments')
+    global static List<List<Recommendation>> generateAppointmentRecs(List<String> userId ) {
+        List<List<Recommendation>> outputs = new List<List<Recommendation>>();
+        
+        // User Context Contact
+        String currentUserId = userId[0];
+        List<User> users = [SELECT ContactId from User WHERE Id = :currentUserId];
+        String contactId = users[0].contactID;
+        
+        List<ServiceAppointment> sas = [SELECT Id, Status FROM ServiceAppointment WHERE ContactId = :contactId];
+        List<Recommendation> queriedRecs = new List<Recommendation>();
+        for(ServiceAppointment sa : sas) {
+            String status = sa.status;
+            if (status.equals('Scheduled')) {
+                queriedRecs = [SELECT Id,Name,AcceptanceLabel,RejectionLabel,Description,ActionReference, ImageId FROM Recommendation WHERE Name='Are you ready for your appointment?'];
+            }
+        }
+        //System.debug(LoggingLevel.Info, 'REC: ' + queriedRecs);
 
+        outputs.add(queriedRecs);
+        
+        return outputs;
+    }
+}
